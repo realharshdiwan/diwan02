@@ -5,76 +5,67 @@ import {
   REGISTRATION,
   NAV,
   STUDIO_PILLARS,
+  STUDIO_FAQ,
+  CAREERS_FAQ,
   RESEARCH_STUDIES,
+  RESEARCH_POSTS,
+  RESEARCH_OPEN_QUESTIONS,
+  DEFAULT_COHORTS,
+  DEFAULT_VENTURES,
   SIKKA_PRODUCT,
   INTERNSHIP_PROGRAMME,
   INTERNSHIP_ROLES,
   HERO_MASCOT,
   THEME_TOKENS,
   normalizeRoute,
+  parseRoute,
   validateApplication,
   buildApplicationMailto,
   resolveMascotRenderMode,
   contrastRatio,
 } from './site';
 
-test('studio positioning, navigation, address, and product-free Research essays align with site structure', () => {
+test('hero statement, navigation, address, FAQs, ventures, and product-free Research notes align with site structure', () => {
   const lower = SITE.heroStatement.toLowerCase();
-  assert.ok(lower.includes('research studio'));
-  assert.ok(lower.includes('business'));
-  assert.ok(lower.includes('software'));
-  assert.ok(lower.includes('ventures'));
+  assert.ok(lower.includes('markets'));
+  assert.ok(lower.includes('businesses'));
+  assert.ok(lower.includes('products'));
   assert.ok(!lower.includes('in bengaluru'));
   assert.ok(!lower.includes('currently operating sikka'));
   assert.equal(REGISTRATION.locality, 'Ramesh Nagar, Bengaluru 560082');
+  assert.equal(STUDIO_PILLARS.length, 3);
+  assert.ok(STUDIO_FAQ.length >= 3);
+  assert.ok(CAREERS_FAQ.length >= 3);
+  assert.ok(DEFAULT_VENTURES.length >= 1);
+  assert.equal(DEFAULT_VENTURES[0].name, 'Sikka');
 
-  assert.deepEqual(
-    STUDIO_PILLARS.map((pillar) => pillar.title),
-    ['Research', 'Ventures', 'Software'],
-  );
-
-  assert.ok(RESEARCH_STUDIES.length >= 1);
-  assert.ok(RESEARCH_STUDIES[0].paragraphs.length >= 2);
-  assert.ok(RESEARCH_STUDIES[0].studioInput.length > 20);
-  const researchSerialized = JSON.stringify(RESEARCH_STUDIES).toLowerCase();
-  assert.ok(!researchSerialized.includes('sikka'));
+  assert.equal(RESEARCH_STUDIES.length, 0);
+  assert.equal(RESEARCH_POSTS.length, 0);
+  assert.equal(RESEARCH_OPEN_QUESTIONS.length, 0);
 
   assert.deepEqual(
     NAV.map((item) => item.label),
-    ['Ventures', 'Research', 'Careers', 'Contact'],
+    ['Product', 'Research', 'Careers', 'Contact'],
   );
   assert.equal(SIKKA_PRODUCT.url, 'https://sikka-pos.vercel.app/#top');
 });
 
-test('internship cohort lists concise terms, a written venture route, and three unpaid open positions', () => {
-  assert.equal(INTERNSHIP_PROGRAMME.terms.length, 4);
-  assert.equal(INTERNSHIP_PROGRAMME.venturePath.length, 3);
-  assert.equal(INTERNSHIP_PROGRAMME.outcomes.length, 3);
-  const termsText = INTERNSHIP_PROGRAMME.terms
-    .map((t) => `${t.label} ${t.value}`)
-    .join(' ')
-    .toLowerCase();
+test('internship cohort lists concise terms, concrete FAQ, and 3 open roles', () => {
+  assert.equal(INTERNSHIP_PROGRAMME.terms.length, 3);
+  assert.equal(CAREERS_FAQ.length, 4);
+  assert.equal(DEFAULT_COHORTS[0].roles.length, 3);
+  assert.equal(
+    INTERNSHIP_ROLES[0].focus,
+    'Visits, operator interviews, and competitor teardowns.',
+  );
+  const termsText = INTERNSHIP_PROGRAMME.terms.map((t) => t.value).join(' ').toLowerCase();
   assert.ok(!termsText.includes('jan'));
   assert.ok(!termsText.includes('jul'));
   assert.ok(!termsText.includes('intake'));
-  assert.ok(termsText.includes('unpaid'));
-  const intro = INTERNSHIP_PROGRAMME.intro.join(' ').toLowerCase();
-  assert.ok(intro.includes('unpaid'));
-  assert.ok(INTERNSHIP_PROGRAMME.ventureNote.toLowerCase().includes('in writing'));
-  assert.ok(
-    INTERNSHIP_PROGRAMME.venturePath.some((s) =>
-      s.title.toLowerCase().includes('publish'),
-    ),
-  );
   assert.deepEqual(
     INTERNSHIP_ROLES.map((r) => r.title),
-    [
-      'Research Intern',
-      'Design & Engineering Intern',
-      'Growth & Distribution Intern',
-    ],
+    ['Research', 'Design & build', 'Growth & distribution'],
   );
-  assert.ok(INTERNSHIP_ROLES.every((r) => r.stipend === 'Unpaid'));
 });
 
 test('application validation catches missing, invalid, or oversized fields including portfolio URL', () => {
@@ -95,7 +86,7 @@ test('application validation catches missing, invalid, or oversized fields inclu
   const oversized = validateApplication({
     name: 'A'.repeat(121),
     email: 'a@example.com',
-    role: 'Research Intern',
+    role: 'Product Research Intern',
     portfolioUrl: 'https://example.com/' + 'a'.repeat(300),
     note: 'x'.repeat(3001),
   });
@@ -107,7 +98,7 @@ test('application validation catches missing, invalid, or oversized fields inclu
   const validInput = {
     name: 'Asha Rao',
     email: 'asha@example.com',
-    role: 'Research Intern',
+    role: 'Product Research Intern',
     portfolioUrl: 'https://github.com/asha',
     note: 'Researched kirana inventory leakage across three Bengaluru neighbourhood stores.',
   };
@@ -117,13 +108,19 @@ test('application validation catches missing, invalid, or oversized fields inclu
 
   const mailto = buildApplicationMailto(validInput);
   assert.ok(mailto.startsWith(`mailto:${SITE.contactEmail}?subject=`));
-  assert.ok(mailto.includes('Research%20Intern'));
+  assert.ok(mailto.includes('Product%20Research%20Intern'));
 });
 
-test('route normalization resolves /, /research, and /careers cleanly', () => {
+test('route normalization resolves /, /research, /research/:slug, /careers, and /studio cleanly', () => {
   assert.equal(normalizeRoute('/'), '/');
   assert.equal(normalizeRoute('/research'), '/research');
+  assert.equal(normalizeRoute('/research/some-post'), '/research');
+  assert.deepEqual(parseRoute('/research/some-post'), {
+    route: '/research',
+    researchSlug: 'some-post',
+  });
   assert.equal(normalizeRoute('/careers'), '/careers');
+  assert.equal(normalizeRoute('/studio'), '/studio');
   assert.equal(normalizeRoute('/unknown'), '/');
 });
 

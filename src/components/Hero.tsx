@@ -33,10 +33,10 @@ export function Hero({ layout, onLayoutChange }: HeroProps) {
           ease: STUDIO_EASE,
           layout: { duration: 0.9, ease: STUDIO_EASE },
         }}
-        className={`font-medium leading-[0.88] tracking-[-0.048em] text-accent ${
+        className={`font-medium leading-[0.94] tracking-[-0.025em] text-accent ${
           isAlt
-            ? 'text-[clamp(2.35rem,4.4vw,4.35rem)] lg:col-start-2 lg:col-span-2 lg:row-start-1 lg:mr-[10.5rem] lg:self-start lg:justify-self-end lg:text-right'
-            : 'text-[clamp(2.85rem,6.8vw,6.45rem)] lg:col-start-1 lg:col-span-3 lg:row-start-1 lg:mr-[26rem] lg:self-start lg:justify-self-start lg:text-left'
+            ? 'text-[clamp(2.35rem,4.3vw,4.2rem)] lg:col-start-2 lg:col-span-2 lg:row-start-1 lg:mr-[10.5rem] lg:self-start lg:justify-self-end lg:text-right'
+            : 'text-[clamp(2.85rem,6.6vw,6.25rem)] lg:col-start-1 lg:col-span-3 lg:row-start-1 lg:mr-[26rem] lg:self-start lg:justify-self-start lg:text-left'
         }`}
       >
         {SITE.name}
@@ -111,7 +111,7 @@ export function Hero({ layout, onLayoutChange }: HeroProps) {
             : 'lg:col-start-2 lg:row-start-2 lg:self-end lg:pb-12'
         }
       >
-        <p className="max-w-[26ch] text-[clamp(1.5rem,2.5vw,2.15rem)] font-medium leading-[1.2] tracking-[-0.025em] text-ink">
+        <p className="max-w-[28ch] text-[clamp(1.4rem,2.3vw,2rem)] font-medium leading-[1.28] tracking-[-0.015em] text-ink">
           {SITE.heroStatement}
         </p>
       </motion.div>
@@ -136,7 +136,7 @@ export function Hero({ layout, onLayoutChange }: HeroProps) {
         <HeroMascot />
       </motion.div>
 
-      {/* Year & Locality: bottom-left in Layout 1; moves mid-right below vertical nav in Layout 2 */}
+      {/* Locality: bottom-left in Layout 1; moves mid-right below vertical nav in Layout 2 */}
       <motion.div
         layout="position"
         initial={{ opacity: 0 }}
@@ -153,7 +153,6 @@ export function Hero({ layout, onLayoutChange }: HeroProps) {
             : 'lg:col-start-1 lg:row-start-3 lg:self-end'
         }`}
       >
-        <Label>{SITE.year}</Label>
         <Label>{REGISTRATION.locality}</Label>
       </motion.div>
 

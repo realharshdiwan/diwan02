@@ -1,4 +1,4 @@
-import { NAV, REGISTRATION, SIKKA_PRODUCT, SITE } from '@/src/lib/site';
+import { NAV, REGISTRATION, SITE } from '@/src/lib/site';
 import { Label } from './Ui';
 
 interface SiteFooterProps {
@@ -62,14 +62,6 @@ export function SiteFooter({ onNavigate }: SiteFooterProps) {
         <Label>
           © {SITE.year} {SITE.name}
         </Label>
-        <a
-          href={SIKKA_PRODUCT.url}
-          target="_blank"
-          rel="noreferrer"
-          className="label underline decoration-line underline-offset-4 transition-colors hover:text-ink hover:decoration-ink"
-        >
-          Sikka — counter billing for retail shops
-        </a>
         <a
           href={`mailto:${SITE.contactEmail}`}
           className="label underline decoration-line underline-offset-4 transition-colors hover:text-ink hover:decoration-ink"

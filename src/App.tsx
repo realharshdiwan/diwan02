@@ -6,17 +6,24 @@ import { HomeSections } from '@/src/components/HomeSections';
 import { ResearchView } from '@/src/components/ResearchView';
 import { SiteFooter } from '@/src/components/SiteFooter';
 import { SiteHeader } from '@/src/components/SiteHeader';
-import { normalizeRoute, type AppRoute, type HeroLayout } from '@/src/lib/site';
+import { StudioView } from '@/src/components/StudioView';
+import {
+  parseRoute,
+  type AppRoute,
+  type HeroLayout,
+  type ParsedRoute,
+} from '@/src/lib/site';
 
 const ROUTE_TITLES: Record<AppRoute, string> = {
   '/': 'Diwan Mercantile — Bengaluru',
-  '/research': 'Research Journal — Diwan Mercantile',
+  '/research': 'Research Field Notes — Diwan Mercantile',
   '/careers': 'Careers — Diwan Mercantile',
+  '/studio': 'Studio Ledger — Diwan Mercantile',
 };
 
 export default function App() {
-  const [route, setRoute] = useState<AppRoute>(() =>
-    normalizeRoute(window.location.pathname),
+  const [parsed, setParsed] = useState<ParsedRoute>(() =>
+    parseRoute(window.location.pathname),
   );
   const [heroLayout, setHeroLayout] = useState<HeroLayout>(1);
   const pendingHashRef = useRef<string | null>(
@@ -24,8 +31,8 @@ export default function App() {
   );
 
   useEffect(() => {
-    document.title = ROUTE_TITLES[route];
-  }, [route]);
+    document.title = ROUTE_TITLES[parsed.route];
+  }, [parsed.route]);
 
   useEffect(() => {
     const hash = pendingHashRef.current;
@@ -35,27 +42,58 @@ export default function App() {
       document.getElementById(hash)?.scrollIntoView();
     });
     return () => cancelAnimationFrame(frame);
-  }, [route]);
+  }, [parsed]);
 
   useEffect(() => {
     const handlePopState = () => {
       pendingHashRef.current = window.location.hash
         ? window.location.hash.slice(1)
         : null;
-      setRoute(normalizeRoute(window.location.pathname));
+      setParsed(parseRoute(window.location.pathname));
     };
     window.addEventListener('popstate', handlePopState);
     return () => window.removeEventListener('popstate', handlePopState);
   }, []);
 
+  useEffect(() => {
+    const handleStudioShortcut = (e: KeyboardEvent) => {
+      const target = e.target as HTMLElement | null;
+      const tag = target?.tagName;
+      if (
+        tag === 'INPUT' ||
+        tag === 'TEXTAREA' ||
+        tag === 'SELECT' ||
+        target?.isContentEditable
+      ) {
+        return;
+      }
+      const pressed =
+        (e.ctrlKey || e.altKey) &&
+        e.shiftKey &&
+        (e.code === 'KeyL' || e.key.toLowerCase() === 'l');
+      if (!pressed) return;
+      e.preventDefault();
+      if (parsed.route !== '/studio') {
+        window.history.pushState({}, '', '/studio');
+        setParsed({ route: '/studio' });
+        window.scrollTo({ top: 0 });
+      }
+    };
+    window.addEventListener('keydown', handleStudioShortcut);
+    return () => window.removeEventListener('keydown', handleStudioShortcut);
+  }, [parsed.route]);
+
   const navigate = (href: string) => {
     const [rawPath, hash] = href.split('#');
-    const nextRoute = normalizeRoute(rawPath || '/');
+    const nextParsed = parseRoute(rawPath || '/');
+    const isSamePage =
+      nextParsed.route === parsed.route &&
+      nextParsed.researchSlug === parsed.researchSlug;
 
-    if (nextRoute !== route) {
+    if (!isSamePage) {
       pendingHashRef.current = hash || null;
       window.history.pushState({}, '', href);
-      setRoute(nextRoute);
+      setParsed(nextParsed);
       if (!hash) {
         window.scrollTo({ top: 0 });
       }
@@ -73,6 +111,14 @@ export default function App() {
     }
   };
 
+  if (parsed.route === '/studio') {
+    return (
+      <MotionConfig reducedMotion="user">
+        <StudioView onNavigate={navigate} />
+      </MotionConfig>
+    );
+  }
+
   return (
     <MotionConfig reducedMotion="user">
       <div className="flex min-h-dvh flex-col">
@@ -84,16 +130,16 @@ export default function App() {
         </a>
 
         <SiteHeader
-          currentRoute={route}
+          currentRoute={parsed.route}
           heroLayout={heroLayout}
           onNavigate={navigate}
         />
 
         <main id="main" className="flex-1">
-          {route === '/careers' ? (
+          {parsed.route === '/careers' ? (
             <CareersView />
-          ) : route === '/research' ? (
-            <ResearchView onNavigate={navigate} />
+          ) : parsed.route === '/research' ? (
+            <ResearchView slug={parsed.researchSlug} onNavigate={navigate} />
           ) : (
             <>
               <Hero layout={heroLayout} onLayoutChange={setHeroLayout} />
