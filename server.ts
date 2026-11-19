@@ -93,7 +93,7 @@ async function dispatchResendEmail(record: StoredApplication): Promise<boolean> 
   const resend = new Resend(config.apiKey);
 
   try {
-    const { error } = await resend.emails.send(
+    const { data, error } = await resend.emails.send(
       buildStudioNotificationPayload(record, {
         from: config.from,
         to: config.notifyEmail,
@@ -104,6 +104,10 @@ async function dispatchResendEmail(record: StoredApplication): Promise<boolean> 
       console.error('[resend] Studio notification rejected:', error);
       return false;
     }
+
+    console.log(
+      `[resend] Studio notification accepted${data?.id ? ` (${data.id})` : ''} for ${config.notifyEmail}.`,
+    );
 
     // Applicant confirmation requires a verified custom sender domain in Resend.
     if (config.customDomain) {
@@ -117,6 +121,10 @@ async function dispatchResendEmail(record: StoredApplication): Promise<boolean> 
         console.warn(
           '[resend] Applicant confirmation skipped:',
           confirmation.error,
+        );
+      } else {
+        console.log(
+          `[resend] Applicant confirmation accepted${confirmation.data?.id ? ` (${confirmation.data.id})` : ''} for ${record.email}.`,
         );
       }
     }
