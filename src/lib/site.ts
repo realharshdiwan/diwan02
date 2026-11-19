@@ -123,7 +123,7 @@ export interface ApplicationRecord extends ApplicationInput {
   emailDispatched: boolean;
 }
 
-export type StudioStream = 'Sikka' | 'Research' | 'Cohort Ops' | 'Studio';
+export type StudioStream = 'parchi.' | 'Research' | 'Cohort Ops' | 'Studio';
 export type StudioItemStatus = 'queued' | 'in_motion' | 'in_review' | 'settled';
 
 export interface StudioItem {
@@ -198,39 +198,31 @@ export const STUDIO_PILLARS: readonly StudioPillar[] = [
 
 export const STUDIO_FAQ: readonly FaqItem[] = [
   {
-    q: 'What does Diwan Mercantile do?',
-    a: 'We research how small operating businesses work on the ground and build narrow, dependable software tools from those findings.',
+    q: 'Do you take on outside projects?',
+    a: 'Primarily we build and research in-house, though we stay open to select outside collaborations or builds if a problem is compelling and aligns with what we do.',
   },
   {
-    q: 'How do you choose what to build next?',
-    a: 'We start by studying real operational constraints—unreliable Wi-Fi, thermal print limits, cash reconciliation—before committing to software.',
+    q: 'How do you pick what to build?',
+    a: 'We spend time watching how small shops and teams manage billing, stock, and cash. We only build when we see a clear daily bottleneck that existing software handles poorly.',
   },
   {
-    q: 'Do you take on client or agency work?',
-    a: 'No. All research notes and software products are developed in-house as independent ventures.',
-  },
-  {
-    q: 'How are new apps released?',
-    a: 'Each app begins as a focused single-workflow tool—such as Sikka for retail counters—and stays simple enough to run locally.',
+    q: 'How are tools like parchi. meant to be used?',
+    a: 'As simple, focused software that stays fast on an everyday counter computer, works offline if the internet drops, and lets you export your data anytime.',
   },
 ];
 
 export const CAREERS_FAQ: readonly FaqItem[] = [
   {
-    q: 'Is the internship paid or unpaid?',
-    a: 'Unpaid. Cohorts run part-time (10–25 hrs/week) over 8–12 weeks; contributors finish with published co-authored work, a certificate, and a letter of recommendation.',
+    q: 'Is the internship paid?',
+    a: 'No, cohorts are unpaid. They run part-time (10–25 hours a week over 8–12 weeks) so you can balance them with college. You leave with published co-authored work, a certificate, and a letter of recommendation.',
   },
   {
-    q: 'What does selection involve?',
-    a: 'Submit the form below with proof of work. Shortlisted candidates do a 20-minute call and a 4-hour role-specific work sample.',
+    q: 'How do applications work?',
+    a: 'Apply on the Careers page with links to anything you have built, written, or investigated. If your work looks like a match, we schedule a 20-minute conversation before you start.',
   },
   {
-    q: 'Can I join remotely or alongside college?',
-    a: 'Yes. Work is remote across India or in person in Bengaluru, scheduled asynchronously around existing coursework.',
-  },
-  {
-    q: 'What happens if a project grows into a product?',
-    a: 'Where a project continues as a venture or product role, terms are agreed separately in writing before further work begins.',
+    q: 'Do I need to be in Bengaluru?',
+    a: 'No. You can join remotely from anywhere in India, or work with us in person in Bengaluru.',
   },
 ];
 
@@ -240,9 +232,9 @@ export const RESEARCH_POSTS: readonly ResearchPost[] = [];
 
 export const RESEARCH_STUDIES: readonly ResearchStudy[] = [];
 
-export const SIKKA_PRODUCT = {
-  name: 'Sikka',
-  url: 'https://sikka-pos.vercel.app/#top',
+export const PARCHI_PRODUCT = {
+  name: 'parchi.',
+  url: 'https://parchi-pos.vercel.app/',
   headline: 'Simple counter billing for busy retail shops.',
   summary:
     'Offline-first point of sale, barcode price tagging, and daily cash reconciliation for Indian apparel, footwear, and retail stores.',
@@ -251,9 +243,9 @@ export const SIKKA_PRODUCT = {
     'Handles size × colour variants, 80mm thermal receipts, UPI QR, and optional GSTIN billing.',
     'Prints Code128 barcode hangtags on 50×25mm thermal rolls and 24-up A4 sheets.',
   ],
-  imageSrc: '/sikka-preview.png',
+  imageSrc: '/parchi-preview.png',
   imageAlt:
-    'Sikka point-of-sale web application showing counter billing and thermal receipt workflow',
+    'parchi. point-of-sale web application showing counter billing and thermal receipt workflow',
 } as const;
 
 export const VENTURE_STATUSES: readonly {
@@ -268,17 +260,17 @@ export const VENTURE_STATUSES: readonly {
 
 export const DEFAULT_VENTURES: readonly VentureRecord[] = [
   {
-    id: 'seed-sikka',
-    slug: 'sikka',
-    name: SIKKA_PRODUCT.name,
-    stageLabel: 'First venture',
-    headline: SIKKA_PRODUCT.headline,
-    summary: SIKKA_PRODUCT.summary,
-    url: SIKKA_PRODUCT.url,
-    ctaLabel: 'Open Sikka',
-    imageSrc: SIKKA_PRODUCT.imageSrc,
-    imageAlt: SIKKA_PRODUCT.imageAlt,
-    highlights: SIKKA_PRODUCT.highlights,
+    id: 'seed-parchi',
+    slug: 'parchi',
+    name: PARCHI_PRODUCT.name,
+    stageLabel: '',
+    headline: PARCHI_PRODUCT.headline,
+    summary: PARCHI_PRODUCT.summary,
+    url: PARCHI_PRODUCT.url,
+    ctaLabel: 'Open parchi.',
+    imageSrc: PARCHI_PRODUCT.imageSrc,
+    imageAlt: PARCHI_PRODUCT.imageAlt,
+    highlights: PARCHI_PRODUCT.highlights,
     status: 'live',
     featured: true,
     sortOrder: 1,
@@ -365,7 +357,7 @@ export const DEFAULT_COHORTS: readonly CohortRecord[] = [
 ];
 
 export const STUDIO_ITEM_STREAMS: readonly StudioStream[] = [
-  'Sikka',
+  'parchi.',
   'Research',
   'Cohort Ops',
   'Studio',

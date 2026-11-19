@@ -62,7 +62,7 @@ create index if not exists applications_status_created_idx
 -- 4. Studio Desk (Teamwork & Internal Operations)
 create table if not exists public.studio_items (
   id uuid primary key default gen_random_uuid(),
-  stream text not null check (stream in ('Sikka', 'Research', 'Cohort Ops', 'Studio')) default 'Studio',
+  stream text not null check (stream in ('parchi.', 'Research', 'Cohort Ops', 'Studio')) default 'Studio',
   title text not null,
   status text not null check (status in ('queued', 'in_motion', 'in_review', 'settled')) default 'queued',
   assignee_name text not null default '',
@@ -175,19 +175,19 @@ insert into public.cohorts (
 )
 on conflict (slug) do nothing;
 
--- Seed initial Sikka venture
+-- Seed initial parchi. venture
 insert into public.ventures (
   slug, name, stage_label, headline, summary, url, cta_label, image_src, image_alt, highlights, status, featured, sort_order, published
 ) values (
-  'sikka',
-  'Sikka',
+  'parchi',
+  'parchi.',
   'First venture',
   'Simple counter billing for busy retail shops.',
   'Offline-first point of sale, barcode price tagging, and daily cash reconciliation for Indian apparel, footwear, and retail stores.',
-  'https://sikka-pos.vercel.app/#top',
-  'Open Sikka',
-  '/sikka-preview.png',
-  'Sikka point-of-sale web application showing counter billing and thermal receipt workflow',
+  'https://parchi-pos.vercel.app/',
+  'Open parchi.',
+  '/parchi-preview.png',
+  'parchi. point-of-sale web application showing counter billing and thermal receipt workflow',
   '[
     "Runs offline on the counter computer with local storage and instant JSON/CSV exports.",
     "Handles size × colour variants, 80mm thermal receipts, UPI QR, and optional GSTIN billing.",

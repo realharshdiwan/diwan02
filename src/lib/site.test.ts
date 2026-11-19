@@ -12,7 +12,7 @@ import {
   RESEARCH_OPEN_QUESTIONS,
   DEFAULT_COHORTS,
   DEFAULT_VENTURES,
-  SIKKA_PRODUCT,
+  PARCHI_PRODUCT,
   INTERNSHIP_PROGRAMME,
   INTERNSHIP_ROLES,
   HERO_MASCOT,
@@ -35,9 +35,11 @@ test('hero statement, navigation, address, FAQs, ventures, and product-free Rese
   assert.equal(REGISTRATION.locality, 'Ramesh Nagar, Bengaluru 560082');
   assert.equal(STUDIO_PILLARS.length, 3);
   assert.ok(STUDIO_FAQ.length >= 3);
+  assert.ok(STUDIO_FAQ[0].a.toLowerCase().includes('compelling'));
+  assert.ok(!STUDIO_FAQ[0].a.toLowerCase().includes('do not take on'));
   assert.ok(CAREERS_FAQ.length >= 3);
   assert.ok(DEFAULT_VENTURES.length >= 1);
-  assert.equal(DEFAULT_VENTURES[0].name, 'Sikka');
+  assert.equal(DEFAULT_VENTURES[0].name, 'parchi.');
 
   assert.equal(RESEARCH_STUDIES.length, 0);
   assert.equal(RESEARCH_POSTS.length, 0);
@@ -47,12 +49,12 @@ test('hero statement, navigation, address, FAQs, ventures, and product-free Rese
     NAV.map((item) => item.label),
     ['Product', 'Research', 'Careers', 'Contact'],
   );
-  assert.equal(SIKKA_PRODUCT.url, 'https://sikka-pos.vercel.app/#top');
+  assert.equal(PARCHI_PRODUCT.url, 'https://parchi-pos.vercel.app/');
 });
 
 test('internship cohort lists concise terms, concrete FAQ, and 3 open roles', () => {
   assert.equal(INTERNSHIP_PROGRAMME.terms.length, 3);
-  assert.equal(CAREERS_FAQ.length, 4);
+  assert.equal(CAREERS_FAQ.length, 3);
   assert.equal(DEFAULT_COHORTS[0].roles.length, 3);
   assert.equal(
     INTERNSHIP_ROLES[0].focus,

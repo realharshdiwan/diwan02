@@ -21,19 +21,13 @@ const revealProps = {
   transition: { duration: 0.7, ease: STUDIO_EASE },
 };
 
-type FaqGroup = 'all' | 'studio' | 'internships';
-
-const CONSOLIDATED_FAQ = [
-  ...STUDIO_FAQ.map((item) => ({ ...item, group: 'studio' as const })),
-  ...CAREERS_FAQ.map((item) => ({ ...item, group: 'internships' as const })),
-];
+const FAQ_ITEMS = [...STUDIO_FAQ, ...CAREERS_FAQ];
 
 export function HomeSections({ onNavigate }: HomeSectionsProps) {
   const [ventures, setVentures] = useState<VentureRecord[]>([
     ...DEFAULT_VENTURES,
   ]);
   const [failedImages, setFailedImages] = useState<Record<string, boolean>>({});
-  const [faqGroup, setFaqGroup] = useState<FaqGroup>('all');
   const [openFaqQuestion, setOpenFaqQuestion] = useState<string | null>(null);
 
   useEffect(() => {
@@ -64,10 +58,6 @@ export function HomeSections({ onNavigate }: HomeSectionsProps) {
     (v) => v.slug !== primaryVenture.slug && v.id !== primaryVenture.id,
   );
 
-  const visibleFaqs = CONSOLIDATED_FAQ.filter(
-    (item) => faqGroup === 'all' || item.group === faqGroup,
-  );
-
   return (
     <>
       {/* ── Ventures Showcase ───────────────────────────────────── */}
@@ -83,12 +73,9 @@ export function HomeSections({ onNavigate }: HomeSectionsProps) {
           </Label>
 
           <div>
-            <div className="flex flex-wrap items-baseline justify-between gap-x-6 gap-y-2">
-              <span className="font-mono text-[11px] uppercase tracking-[0.14em] text-ink">
+            <div>
+              <span className="font-serif text-[17px] font-semibold tracking-[-0.015em] text-ink">
                 {primaryVenture.name}
-              </span>
-              <span className="font-mono text-[11px] uppercase tracking-[0.14em] text-ink-3">
-                {primaryVenture.stageLabel}
               </span>
             </div>
 
@@ -198,7 +185,7 @@ export function HomeSections({ onNavigate }: HomeSectionsProps) {
                   >
                     <div>
                       <div className="flex items-baseline justify-between gap-4">
-                        <span className="font-mono text-[11px] uppercase tracking-[0.14em] text-ink">
+                        <span className="font-serif text-[15.5px] font-semibold tracking-[-0.015em] text-ink">
                           {venture.name}
                         </span>
                         <span className="font-mono text-[11px] uppercase tracking-[0.14em] text-ink-3">
@@ -278,7 +265,7 @@ export function HomeSections({ onNavigate }: HomeSectionsProps) {
         </div>
       </motion.section>
 
-      {/* ── Consolidated FAQ (Studio + Internships) ────────────── */}
+      {/* ── Clean Click-to-Reveal FAQ ─────────────────────────── */}
       <motion.section
         {...revealProps}
         id="faq"
@@ -290,85 +277,47 @@ export function HomeSections({ onNavigate }: HomeSectionsProps) {
             FAQ
           </Label>
 
-          <div className="max-w-[50rem]">
-            <div className="flex flex-wrap items-baseline justify-between gap-4">
-              <h2 className="text-[clamp(1.375rem,2.3vw,1.85rem)] leading-[1.2] tracking-[-0.02em] text-ink">
-                Common questions.
-              </h2>
-
-              <div
-                className="flex items-center gap-4"
-                role="tablist"
-                aria-label="Filter questions"
-              >
-                {(
-                  [
-                    { id: 'all', label: 'All' },
-                    { id: 'studio', label: 'Studio' },
-                    { id: 'internships', label: 'Internships' },
-                  ] as const
-                ).map((tab) => {
-                  const active = faqGroup === tab.id;
-                  return (
+          <dl className="max-w-[46rem] divide-y divide-line border-y border-line">
+            {FAQ_ITEMS.map((item, idx) => {
+              const isOpen = openFaqQuestion === item.q;
+              const answerId = `faq-answer-${idx}`;
+              return (
+                <div key={item.q}>
+                  <dt>
                     <button
-                      key={tab.id}
                       type="button"
-                      role="tab"
-                      aria-selected={active}
-                      onClick={() => setFaqGroup(tab.id)}
-                      className={`cursor-pointer font-mono text-[11px] uppercase tracking-[0.14em] transition-colors ${
-                        active
-                          ? 'text-accent underline decoration-accent underline-offset-4'
-                          : 'text-ink-3 hover:text-ink'
-                      }`}
+                      aria-expanded={isOpen}
+                      aria-controls={answerId}
+                      onClick={() =>
+                        setOpenFaqQuestion((prev) =>
+                          prev === item.q ? null : item.q,
+                        )
+                      }
+                      className="group flex w-full cursor-pointer items-baseline justify-between gap-6 py-4 text-left transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
                     >
-                      {tab.label}
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-
-            <dl className="mt-6 divide-y divide-line border-y border-line">
-              {visibleFaqs.map((item) => {
-                const isOpen = openFaqQuestion === item.q;
-                return (
-                  <div key={item.q} className="py-3.5">
-                    <dt>
-                      <button
-                        type="button"
-                        aria-expanded={isOpen}
-                        onClick={() =>
-                          setOpenFaqQuestion(isOpen ? null : item.q)
-                        }
-                        className="flex w-full cursor-pointer items-baseline justify-between gap-4 text-left transition-colors hover:text-accent"
+                      <span className="text-[15.5px] font-medium leading-[1.45] text-ink transition-colors group-hover:text-accent sm:text-[16px]">
+                        {item.q}
+                      </span>
+                      <span
+                        aria-hidden="true"
+                        className="shrink-0 font-mono text-[15px] text-ink-3 transition-colors group-hover:text-accent"
                       >
-                        <span className="text-[15px] font-medium leading-[1.45] text-ink">
-                          {item.q}
-                        </span>
-                        <span className="flex shrink-0 items-baseline gap-4">
-                          <span className="hidden font-mono text-[10px] uppercase tracking-[0.12em] text-ink-3 sm:inline">
-                            {item.group === 'studio' ? 'Studio' : 'Internships'}
-                          </span>
-                          <span
-                            aria-hidden="true"
-                            className="font-mono text-[14px] text-ink-3"
-                          >
-                            {isOpen ? '−' : '+'}
-                          </span>
-                        </span>
-                      </button>
-                    </dt>
-                    {isOpen && (
-                      <dd className="mt-2 max-w-[58ch] pr-6 text-[14.5px] leading-[1.65] text-ink-2">
-                        {item.a}
-                      </dd>
-                    )}
-                  </div>
-                );
-              })}
-            </dl>
-          </div>
+                        {isOpen ? '−' : '+'}
+                      </span>
+                    </button>
+                  </dt>
+                  {isOpen && (
+                    <dd
+                      id={answerId}
+                      className="max-w-[60ch] pb-5 pr-8 pt-0.5 text-[14.5px] leading-[1.65] text-ink-2 sm:text-[15px]"
+                    >
+                      {item.a}
+                    </dd>
+                  )}
+                </div>
+              );
+            })}
+          </dl>
         </div>
       </motion.section>
 

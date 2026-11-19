@@ -194,7 +194,7 @@ export function StudioView({ onNavigate }: StudioViewProps) {
   );
   const [deskSearch, setDeskSearch] = useState('');
   const [newTaskTitle, setNewTaskTitle] = useState('');
-  const [newTaskStream, setNewTaskStream] = useState<StudioStream>('Sikka');
+  const [newTaskStream, setNewTaskStream] = useState<StudioStream>('parchi.');
   const [newTaskAssignee, setNewTaskAssignee] = useState('');
   const [newTaskDue, setNewTaskDue] = useState('');
   const [newTaskNotes, setNewTaskNotes] = useState('');
@@ -1445,7 +1445,7 @@ export function StudioView({ onNavigate }: StudioViewProps) {
                           slug: prev.id ? prev.slug : slugifyTitle(name),
                         }));
                       }}
-                      placeholder="Sikka"
+                      placeholder="parchi."
                       className="w-full border border-line bg-field px-3 py-2 text-[14px] text-ink"
                     />
                   </div>
@@ -1562,7 +1562,7 @@ export function StudioView({ onNavigate }: StudioViewProps) {
                           ctaLabel: e.target.value,
                         }))
                       }
-                      placeholder="Open Sikka"
+                      placeholder="Open parchi."
                       className="w-full border border-line bg-field px-3 py-2 text-[13.5px] text-ink"
                     />
                   </div>
@@ -1580,7 +1580,7 @@ export function StudioView({ onNavigate }: StudioViewProps) {
                           imageSrc: e.target.value,
                         }))
                       }
-                      placeholder="/sikka-preview.png"
+                      placeholder="/parchi-preview.png"
                       className="w-full border border-line bg-field px-3 py-2 text-[13.5px] text-ink"
                     />
                   </div>
@@ -2142,7 +2142,7 @@ export function StudioView({ onNavigate }: StudioViewProps) {
               <div className="overflow-x-auto border border-line bg-paper">
                 {filteredDesk.length === 0 ? (
                   <p className="p-6 text-[14.5px] text-ink-2">
-                    Desk is clear. Log an action item above across Sikka,
+                    Desk is clear. Log an action item above across parchi.,
                     Research, Cohort Ops, or Studio.
                   </p>
                 ) : (
