@@ -1,5 +1,5 @@
-import { SITE } from '../src/lib/site';
-import { resolveResendConfig } from '../src/lib/resendEmail';
+import { SITE } from '../src/lib/site.ts';
+import { resolveResendConfig } from '../src/lib/resendEmail.ts';
 
 interface ApiResponse {
   status(code: number): ApiResponse;

@@ -3,12 +3,12 @@ import {
   SITE,
   validateApplication,
   type ApplicationInput,
-} from '../src/lib/site';
+} from '../src/lib/site.ts';
 import {
   buildApplicantConfirmationPayload,
   buildStudioNotificationPayload,
   resolveResendConfig,
-} from '../src/lib/resendEmail';
+} from '../src/lib/resendEmail.ts';
 
 interface ApiRequest {
   method?: string;
