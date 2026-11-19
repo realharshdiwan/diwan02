@@ -24,6 +24,7 @@ interface SubmissionReceipt {
   name: string;
   role: string;
   submittedAt: string;
+  stored: boolean;
   emailDispatched: boolean;
 }
 
@@ -35,11 +36,13 @@ export function CareersView() {
   const [serverError, setServerError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [receipt, setReceipt] = useState<SubmissionReceipt | null>(null);
+  const [roleChosen, setRoleChosen] = useState(false);
 
   const [honeypot, setHoneypot] = useState('');
 
   const selectRole = (roleTitle: string) => {
     setForm((prev) => ({ ...prev, role: roleTitle }));
+    setRoleChosen(true);
     setReceipt(null);
     setServerError(null);
     setErrors((prev) => ({ ...prev, role: undefined }));
@@ -75,6 +78,7 @@ export function CareersView() {
         ok?: boolean;
         id?: string;
         submittedAt?: string;
+        stored?: boolean;
         emailDispatched?: boolean;
         message?: string;
         errors?: Partial<Record<keyof ApplicationInput, string>>;
@@ -96,12 +100,13 @@ export function CareersView() {
         name: form.name.trim(),
         role: form.role.trim(),
         submittedAt: payload.submittedAt || new Date().toISOString(),
+        stored: payload.stored !== false,
         emailDispatched: Boolean(payload.emailDispatched),
       });
       setForm({ ...INITIAL_FORM, role: form.role });
     } catch {
       setServerError(
-        `Network error while sending application. Email ${SITE.contactEmail} directly.`,
+        `We could not reach the application endpoint. Email ${SITE.contactEmail} directly.`,
       );
     } finally {
       setSubmitting(false);
@@ -110,7 +115,7 @@ export function CareersView() {
 
   return (
     <>
-      {/* ── Minimal Opening ─────────────────────────────────────── */}
+      {/* ── Opening ─────────────────────────────────────────────── */}
       <motion.section
         initial={{ opacity: 0, y: 16 }}
         animate={{ opacity: 1, y: 0 }}
@@ -123,15 +128,23 @@ export function CareersView() {
             {INTERNSHIP_PROGRAMME.eyebrow}
           </Label>
 
-          <div className="max-w-[46rem]">
-            <h1 className="max-w-[22ch] text-[clamp(1.85rem,4vw,2.75rem)] leading-[1.08] text-accent">
+          <div className="max-w-[54rem]">
+            <h1 className="max-w-[24ch] text-[clamp(1.85rem,4vw,2.75rem)] leading-[1.08] tracking-[-0.03em] text-ink">
               {INTERNSHIP_PROGRAMME.headline}
             </h1>
-            <p className="mt-4 max-w-[54ch] text-[15.5px] leading-[1.68] text-ink-2">
-              {INTERNSHIP_PROGRAMME.intro}
-            </p>
 
-            <dl className="mt-8 grid gap-x-8 gap-y-5 sm:grid-cols-3">
+            <div className="mt-5 max-w-[58ch] space-y-3">
+              {INTERNSHIP_PROGRAMME.intro.map((paragraph) => (
+                <p
+                  key={paragraph}
+                  className="text-[15.5px] leading-[1.68] text-ink-2"
+                >
+                  {paragraph}
+                </p>
+              ))}
+            </div>
+
+            <dl className="mt-9 grid gap-x-8 gap-y-5 border-t border-line pt-6 sm:grid-cols-2 lg:grid-cols-4">
               {INTERNSHIP_PROGRAMME.terms.map((item) => (
                 <div key={item.label}>
                   <dt className="label">{item.label}</dt>
@@ -141,40 +154,82 @@ export function CareersView() {
                 </div>
               ))}
             </dl>
+          </div>
+        </div>
+      </motion.section>
 
-            <div className="mt-9 border border-line bg-paper p-6 sm:p-7">
-              <div className="flex flex-wrap items-baseline justify-between gap-2">
-                <Label as="p">Ownership & venture route</Label>
-                <a
-                  href="#positions"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    document
-                      .getElementById('positions')
-                      ?.scrollIntoView({ behavior: 'smooth' });
-                  }}
-                  className="text-[13px] text-ink underline decoration-line underline-offset-4 transition-colors duration-300 hover:text-accent hover:decoration-accent"
+      {/* ── How it works ────────────────────────────────────────── */}
+      <motion.section
+        initial={{ opacity: 0, y: 18 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true, amount: 0.15 }}
+        transition={{ duration: 0.8, ease: STUDIO_EASE }}
+        aria-labelledby="how-label"
+        className="gutter py-10 sm:py-14"
+      >
+        <div className="shell">
+          <Label as="p" id="how-label">
+            How it works
+          </Label>
+
+          <div className="max-w-[54rem]">
+            <h2 className="max-w-[28ch] text-[clamp(1.375rem,2.4vw,1.85rem)] leading-[1.22] tracking-[-0.025em]">
+              One question, worked in the field, published at the end.
+            </h2>
+
+            <ol className="mt-8 grid gap-8 border-t border-line pt-7 sm:grid-cols-3 sm:gap-6">
+              {INTERNSHIP_PROGRAMME.venturePath.map((item) => (
+                <li
+                  key={item.step}
+                  className="sm:border-l sm:border-line sm:pl-5 sm:first:border-l-0 sm:first:pl-0"
                 >
-                  View open roles
-                </a>
-              </div>
+                  <span className="font-mono text-[11px] tracking-[0.14em] text-accent">
+                    {item.step}
+                  </span>
+                  <p className="mt-2 text-[1.0625rem] font-medium leading-[1.35] text-ink">
+                    {item.title}
+                  </p>
+                  <p className="mt-1.5 max-w-[32ch] text-[13.5px] leading-[1.6] text-ink-2">
+                    {item.detail}
+                  </p>
+                </li>
+              ))}
+            </ol>
 
-              <ol className="mt-5 grid gap-6 sm:grid-cols-3">
-                {INTERNSHIP_PROGRAMME.venturePath.map((item) => (
-                  <li key={item.step}>
-                    <span className="font-mono text-[11px] tracking-[0.14em] text-accent">
-                      {item.step}
-                    </span>
-                    <p className="mt-1.5 text-[15px] font-medium leading-[1.35] text-ink">
-                      {item.title}
-                    </p>
-                    <p className="mt-1.5 text-[13.5px] leading-[1.6] text-ink-2">
-                      {item.detail}
-                    </p>
-                  </li>
-                ))}
-              </ol>
-            </div>
+            <p className="mt-8 max-w-[62ch] border-t border-line pt-5 text-[13.5px] leading-[1.65] text-ink-3">
+              {INTERNSHIP_PROGRAMME.ventureNote}
+            </p>
+          </div>
+        </div>
+      </motion.section>
+
+      {/* ── What you leave with ─────────────────────────────────── */}
+      <motion.section
+        initial={{ opacity: 0, y: 18 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true, amount: 0.2 }}
+        transition={{ duration: 0.8, ease: STUDIO_EASE }}
+        aria-labelledby="outcomes-label"
+        className="gutter py-10 sm:py-14"
+      >
+        <div className="shell">
+          <Label as="p" id="outcomes-label">
+            What you leave with
+          </Label>
+
+          <div className="max-w-[54rem]">
+            <ul className="grid gap-6 border-t border-line pt-7 sm:grid-cols-3">
+              {INTERNSHIP_PROGRAMME.outcomes.map((outcome, index) => (
+                <li key={outcome} className="flex gap-3">
+                  <span className="label pt-0.5">
+                    {String(index + 1).padStart(2, '0')}
+                  </span>
+                  <p className="text-[14.5px] leading-[1.6] text-ink">
+                    {outcome}
+                  </p>
+                </li>
+              ))}
+            </ul>
           </div>
         </div>
       </motion.section>
@@ -193,44 +248,52 @@ export function CareersView() {
             Open roles
           </Label>
 
-          <ol className="max-w-[48rem] space-y-6">
-            {INTERNSHIP_ROLES.map((role) => {
-              const isSelected = form.role === role.title;
-              return (
-                <li key={role.id}>
-                  <div className="grid gap-3 py-1 sm:grid-cols-[2.5rem_minmax(0,1fr)_auto] sm:items-center sm:gap-5">
-                    <span className="label">{role.number}</span>
-                    <div>
-                      <h2 className="text-[1.125rem] leading-[1.25] tracking-[-0.02em] text-ink">
-                        {role.title}
-                      </h2>
-                      <p className="mt-1 max-w-[50ch] text-[14px] leading-[1.55] text-ink-2">
-                        {role.focus}{' '}
-                        <span className="font-mono text-[11px] uppercase tracking-[0.1em] text-ink-3">
-                          · {role.commitment} · {role.stipend}
-                        </span>
-                      </p>
+          <div className="max-w-[54rem]">
+            <p className="max-w-[52ch] text-[15px] leading-[1.65] text-ink-2">
+              Three roles, one cohort. Apply to the one closest to the work you
+              already do.
+            </p>
+
+            <ol className="mt-7 border-t border-line">
+              {INTERNSHIP_ROLES.map((role) => {
+                const isSelected =
+                  roleChosen && form.role === role.title;
+                return (
+                  <li key={role.id} className="border-b border-line">
+                    <div className="grid gap-3 py-5 sm:grid-cols-[2.5rem_minmax(0,1fr)_auto] sm:items-center sm:gap-6">
+                      <span className="label">{role.number}</span>
+                      <div>
+                        <h2 className="text-[1.0625rem] leading-[1.3] tracking-[-0.015em] text-ink">
+                          {role.title}
+                        </h2>
+                        <p className="mt-1 max-w-[52ch] text-[14px] leading-[1.55] text-ink-2">
+                          {role.focus}
+                        </p>
+                        <p className="mt-1 font-mono text-[11px] uppercase tracking-[0.1em] text-ink-3">
+                          {role.commitment}
+                        </p>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => selectRole(role.title)}
+                        className={`cursor-pointer justify-self-start whitespace-nowrap border px-4 py-2 font-mono text-[11px] uppercase tracking-[0.12em] transition-colors duration-300 sm:justify-self-end ${
+                          isSelected
+                            ? 'border-accent bg-accent text-paper'
+                            : 'border-line bg-transparent text-ink hover:border-ink'
+                        }`}
+                      >
+                        {isSelected ? 'Selected' : 'Apply'}
+                      </button>
                     </div>
-                    <button
-                      type="button"
-                      onClick={() => selectRole(role.title)}
-                      className={`cursor-pointer justify-self-start whitespace-nowrap border px-4 py-2 font-mono text-[11px] uppercase tracking-[0.12em] transition-colors duration-300 sm:justify-self-end ${
-                        isSelected
-                          ? 'border-accent bg-accent text-paper'
-                          : 'border-line bg-paper text-ink hover:border-ink'
-                      }`}
-                    >
-                      {isSelected ? 'Selected' : 'Apply'}
-                    </button>
-                  </div>
-                </li>
-              );
-            })}
-          </ol>
+                  </li>
+                );
+              })}
+            </ol>
+          </div>
         </div>
       </motion.section>
 
-      {/* ── Direct Application Form (POST /api/apply) ───────────── */}
+      {/* ── Application form (POST /api/apply) ──────────────────── */}
       <motion.section
         initial={{ opacity: 0, y: 18 }}
         whileInView={{ opacity: 1, y: 0 }}
@@ -249,6 +312,10 @@ export function CareersView() {
             <h2 className="text-[clamp(1.375rem,2.4vw,1.85rem)] leading-[1.2] tracking-[-0.025em]">
               Submit an application.
             </h2>
+            <p className="mt-3 max-w-[52ch] text-[14.5px] leading-[1.65] text-ink-2">
+              We read every application. If we want to take it further, we
+              invite you to a 20-minute call and a short work sample.
+            </p>
 
             {INTERNSHIP_PROGRAMME.googleFormUrl ? (
               <div className="mt-6">
@@ -271,12 +338,38 @@ export function CareersView() {
                 </p>
                 <p className="mt-2 text-[14px] leading-[1.6] text-ink-2">
                   Your submission has been recorded. Shortlisted applicants are
-                  invited for a 20-minute call and a 4-hour work sample.
+                  invited for a 20-minute call and a short work sample.
                 </p>
+
+                {!receipt.stored && (
+                  <p className="mt-3 text-[13.5px] leading-[1.6] text-ink-2">
+                    We could not add this to our applications list, but your
+                    email reached us. Reply to the confirmation if you do not
+                    hear back.
+                  </p>
+                )}
+
+                {!receipt.emailDispatched && (
+                  <p className="mt-3 text-[13.5px] leading-[1.6] text-accent">
+                    Our email notification did not go through. Please also send
+                    your application to{' '}
+                    <a
+                      href={`mailto:${SITE.contactEmail}`}
+                      className="underline decoration-accent underline-offset-4"
+                    >
+                      {SITE.contactEmail}
+                    </a>
+                    .
+                  </p>
+                )}
+
                 <div className="mt-5 flex flex-wrap items-center gap-4">
                   <button
                     type="button"
-                    onClick={() => setReceipt(null)}
+                    onClick={() => {
+                      setReceipt(null);
+                      setRoleChosen(false);
+                    }}
                     className="cursor-pointer border border-line px-4 py-2 font-mono text-[11px] uppercase tracking-[0.12em] text-ink-2 transition-colors hover:border-ink hover:text-ink"
                   >
                     Submit another application
@@ -284,11 +377,7 @@ export function CareersView() {
                 </div>
               </div>
             ) : (
-              <form
-                onSubmit={handleSubmit}
-                noValidate
-                className="mt-7 space-y-5"
-              >
+              <form onSubmit={handleSubmit} noValidate className="mt-7 space-y-5">
                 <div className="sr-only" aria-hidden="true">
                   <label htmlFor="apply-website">Website</label>
                   <input
@@ -307,9 +396,10 @@ export function CareersView() {
                   <select
                     id="apply-role"
                     value={form.role}
-                    onChange={(e) =>
-                      setForm((prev) => ({ ...prev, role: e.target.value }))
-                    }
+                    onChange={(e) => {
+                      setForm((prev) => ({ ...prev, role: e.target.value }));
+                      setRoleChosen(true);
+                    }}
                     className="w-full border border-line bg-paper px-3.5 py-2.5 text-[15px] text-ink"
                   >
                     {INTERNSHIP_ROLES.map((r) => (
@@ -397,7 +487,7 @@ export function CareersView() {
 
                 <div>
                   <label htmlFor="apply-note" className="label mb-2 block">
-                    What have you built, studied, or analysed?
+                    Tell us about one thing you investigated
                   </label>
                   <textarea
                     id="apply-note"
@@ -407,7 +497,7 @@ export function CareersView() {
                     onChange={(e) =>
                       setForm((prev) => ({ ...prev, note: e.target.value }))
                     }
-                    placeholder="Share a concrete project, teardown, or problem you investigated."
+                    placeholder="What you expected, what you found, and what you changed."
                     className="w-full border border-line bg-paper px-3.5 py-2.5 text-[15px] text-ink placeholder:text-ink-3"
                   />
                   {errors.note && (
@@ -432,7 +522,7 @@ export function CareersView() {
                     {submitting ? 'Submitting…' : 'Submit application'}
                   </button>
                   <a
-                    href={`mailto:${SITE.contactEmail}?subject=${encodeURIComponent('Cohort 2026–27 Enquiry')}`}
+                    href={`mailto:${SITE.contactEmail}?subject=${encodeURIComponent('Cohort 2026–27 enquiry')}`}
                     className="text-[14px] text-ink-2 underline decoration-line underline-offset-4 transition-colors duration-300 hover:text-accent hover:decoration-accent"
                   >
                     Direct email

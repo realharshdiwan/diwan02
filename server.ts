@@ -84,6 +84,9 @@ function isRateLimited(ip: string): boolean {
 async function dispatchResendEmail(record: StoredApplication): Promise<boolean> {
   const config = resolveResendConfig(process.env, SITE.contactEmail);
   if (!config.apiKey) {
+    console.warn(
+      '[resend] RESEND_API_KEY is not set. The application was recorded, but no email was sent.',
+    );
     return false;
   }
 
@@ -98,7 +101,7 @@ async function dispatchResendEmail(record: StoredApplication): Promise<boolean> 
     );
 
     if (error) {
-      console.error('[resend] Studio notification rejected:', error.message);
+      console.error('[resend] Studio notification rejected:', error);
       return false;
     }
 
@@ -113,15 +116,14 @@ async function dispatchResendEmail(record: StoredApplication): Promise<boolean> 
       if (confirmation.error) {
         console.warn(
           '[resend] Applicant confirmation skipped:',
-          confirmation.error.message,
+          confirmation.error,
         );
       }
     }
 
     return true;
   } catch (err) {
-    const message = err instanceof Error ? err.message : 'Unknown error';
-    console.error('[resend] Unexpected delivery error:', message);
+    console.error('[resend] Unexpected delivery error:', err);
     return false;
   }
 }
@@ -182,11 +184,24 @@ async function startServer() {
   app.set('trust proxy', 1);
   app.use(express.json({ limit: '64kb' }));
 
+  const startupResend = resolveResendConfig(process.env, SITE.contactEmail);
+  if (!startupResend.apiKey) {
+    console.warn(
+      '[resend] RESEND_API_KEY is missing. Applications will be recorded, but no email will be sent until it is set in .env.',
+    );
+  } else {
+    console.log(
+      `[resend] Sending from "${startupResend.from}" to "${startupResend.notifyEmail}".`,
+    );
+  }
+
   app.get('/api/health', (_req, res) => {
     const resendConfig = resolveResendConfig(process.env, SITE.contactEmail);
     res.json({
       ok: true,
       emailConfigured: Boolean(resendConfig.apiKey),
+      resendFrom: resendConfig.from,
+      notifyEmail: resendConfig.notifyEmail,
       customResendDomain: resendConfig.customDomain,
       webhookConfigured: Boolean(process.env.APPLICATION_WEBHOOK_URL),
     });
@@ -226,6 +241,7 @@ async function startServer() {
         ok: true,
         id: generateReferenceId(),
         submittedAt: new Date().toISOString(),
+        stored: false,
         emailDispatched: false,
       });
       return;
@@ -266,22 +282,46 @@ async function startServer() {
     };
 
     try {
-      await saveApplication(record);
-      const [emailDispatched] = await Promise.all([
+      // Email and webhook delivery must not depend on the local filesystem.
+      // Send first, then persist as a best-effort record.
+      const [emailDispatched, webhookDispatched] = await Promise.all([
         dispatchResendEmail(record),
         dispatchWebhook(record),
       ]);
+
+      let stored = true;
+      try {
+        await saveApplication(record);
+      } catch (storageError) {
+        stored = false;
+        console.error(
+          '[applications] Could not store the application:',
+          storageError,
+        );
+      }
+
+      if (!stored && !emailDispatched && !webhookDispatched) {
+        res.status(500).json({
+          ok: false,
+          message:
+            'Could not record your application right now. Email diwanmercantileindia@gmail.com directly.',
+        });
+        return;
+      }
+
       res.status(201).json({
         ok: true,
         id: record.id,
         submittedAt: record.submittedAt,
+        stored,
         emailDispatched,
+        webhookDispatched,
       });
     } catch {
       res.status(500).json({
         ok: false,
         message:
-          'Could not store your application right now. Email diwanmercantileindia@gmail.com directly.',
+          'Could not record your application right now. Email diwanmercantileindia@gmail.com directly.',
       });
     }
   });

@@ -46,27 +46,32 @@ test('studio positioning, navigation, address, and product-free Research essays 
   assert.equal(SIKKA_PRODUCT.url, 'https://sikka-pos.vercel.app/#top');
 });
 
-test('internship cohort lists concise terms, venture partnership route, and all 5 unpaid open positions', () => {
-  assert.equal(INTERNSHIP_PROGRAMME.terms.length, 3);
+test('internship cohort lists concise terms, a written venture route, and three unpaid open positions', () => {
+  assert.equal(INTERNSHIP_PROGRAMME.terms.length, 4);
   assert.equal(INTERNSHIP_PROGRAMME.venturePath.length, 3);
-  const termsText = INTERNSHIP_PROGRAMME.terms.map((t) => t.value).join(' ').toLowerCase();
+  assert.equal(INTERNSHIP_PROGRAMME.outcomes.length, 3);
+  const termsText = INTERNSHIP_PROGRAMME.terms
+    .map((t) => `${t.label} ${t.value}`)
+    .join(' ')
+    .toLowerCase();
   assert.ok(!termsText.includes('jan'));
   assert.ok(!termsText.includes('jul'));
   assert.ok(!termsText.includes('intake'));
-  assert.ok(INTERNSHIP_PROGRAMME.intro.toLowerCase().includes('partnership'));
+  assert.ok(termsText.includes('unpaid'));
+  const intro = INTERNSHIP_PROGRAMME.intro.join(' ').toLowerCase();
+  assert.ok(intro.includes('unpaid'));
+  assert.ok(INTERNSHIP_PROGRAMME.ventureNote.toLowerCase().includes('in writing'));
   assert.ok(
     INTERNSHIP_PROGRAMME.venturePath.some((s) =>
-      s.title.toLowerCase().includes('venture'),
+      s.title.toLowerCase().includes('publish'),
     ),
   );
   assert.deepEqual(
     INTERNSHIP_ROLES.map((r) => r.title),
     [
-      'Product Research Intern',
-      'Product Strategy & Planning Intern',
-      'Marketing & Growth Intern',
-      'UI/UX Design Intern',
-      'Software Development Intern',
+      'Research Intern',
+      'Design & Engineering Intern',
+      'Growth & Distribution Intern',
     ],
   );
   assert.ok(INTERNSHIP_ROLES.every((r) => r.stipend === 'Unpaid'));
@@ -90,7 +95,7 @@ test('application validation catches missing, invalid, or oversized fields inclu
   const oversized = validateApplication({
     name: 'A'.repeat(121),
     email: 'a@example.com',
-    role: 'Product Research Intern',
+    role: 'Research Intern',
     portfolioUrl: 'https://example.com/' + 'a'.repeat(300),
     note: 'x'.repeat(3001),
   });
@@ -102,7 +107,7 @@ test('application validation catches missing, invalid, or oversized fields inclu
   const validInput = {
     name: 'Asha Rao',
     email: 'asha@example.com',
-    role: 'Product Research Intern',
+    role: 'Research Intern',
     portfolioUrl: 'https://github.com/asha',
     note: 'Researched kirana inventory leakage across three Bengaluru neighbourhood stores.',
   };
@@ -112,7 +117,7 @@ test('application validation catches missing, invalid, or oversized fields inclu
 
   const mailto = buildApplicationMailto(validInput);
   assert.ok(mailto.startsWith(`mailto:${SITE.contactEmail}?subject=`));
-  assert.ok(mailto.includes('Product%20Research%20Intern'));
+  assert.ok(mailto.includes('Research%20Intern'));
 });
 
 test('route normalization resolves /, /research, and /careers cleanly', () => {

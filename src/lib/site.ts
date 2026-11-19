@@ -147,77 +147,74 @@ export const SIKKA_PRODUCT = {
 
 export const INTERNSHIP_PROGRAMME = {
   eyebrow: 'Careers',
-  headline: 'Work directly on live research and software builds.',
-  intro:
-    'Small 2–4 person part-time cohorts working beside founders on market research and software builds. Internships are unpaid; contributors who originate a thesis and lead execution qualify for a studio partnership or venture share.',
+  headline: 'A small cohort, working on one real question.',
+  intro: [
+    'Diwan Mercantile runs a cohort of two to four people alongside the studio. You take one question — how a market works, why a tool fails at the counter — and work it through shop visits, operator interviews, teardowns, and a written note.',
+    'It runs for 8–12 weeks, part-time, and is unpaid. We work remotely, with field visits in Bengaluru where the question needs them.',
+  ],
   /** Optional external Google Form URL; leave empty to use built-in POST /api/apply form. */
   googleFormUrl: '',
   terms: [
-    { label: 'Format', value: '8–12 weeks · Unpaid · Certificate & LOR' },
-    { label: 'Schedule', value: '10–25 hrs/week · Remote or Bengaluru' },
-    { label: 'Selection', value: 'Application → 20-min call → 4-hr work sample' },
+    { label: 'Length', value: '8–12 weeks' },
+    { label: 'Commitment', value: '10–20 hours a week' },
+    { label: 'Stipend', value: 'Unpaid' },
+    { label: 'Location', value: 'Remote; Bengaluru for field work' },
   ],
   venturePath: [
     {
       step: '01',
-      title: 'Originate a thesis',
+      title: 'Choose a question',
       detail:
-        'Bring a clear market problem or product wedge backed by field research.',
+        "Pick one from the studio's open questions, or bring your own with evidence that it matters.",
     },
     {
       step: '02',
-      title: 'Lead execution',
+      title: 'Work it',
       detail:
-        'Drive design, engineering, or merchant adoption from prototype to live launch.',
+        'Shop visits, operator interviews, competitor teardowns, and a prototype where it helps.',
     },
     {
       step: '03',
-      title: 'Earn venture share',
+      title: 'Publish',
       detail:
-        'Approved builds that reach revenue transition into a formal partner or profit-share stake.',
+        'Write the field note, present what changed, and get credited as co-author.',
     },
   ] as readonly VentureStep[],
+  ventureNote:
+    'Where a project becomes a venture, terms are agreed in writing before work continues. Nothing is promised in advance.',
+  outcomes: [
+    'A published field note with your name on it.',
+    'A prototype or a shipped change inside a real product.',
+    'A written reference when the cohort ends.',
+  ],
 } as const;
 
 export const INTERNSHIP_ROLES: readonly InternshipRole[] = [
   {
-    id: 'product-research',
+    id: 'research',
     number: '01',
-    title: 'Product Research Intern',
-    focus: 'Sector mapping, field workflows, competitor tear-downs, and problem validation.',
+    title: 'Research Intern',
+    focus:
+      'Shop visits, operator interviews, competitor teardowns, and the written note.',
     commitment: '10–20 hrs/wk',
     stipend: 'Unpaid',
   },
   {
-    id: 'product-strategy',
+    id: 'design-engineering',
     number: '02',
-    title: 'Product Strategy & Planning Intern',
-    focus: 'Venture sizing, unit economics, pricing structure, and release scoping.',
-    commitment: '10–20 hrs/wk',
-    stipend: 'Unpaid',
-  },
-  {
-    id: 'marketing-growth',
-    number: '03',
-    title: 'Marketing & Growth Intern',
-    focus: 'Merchant outreach, distribution tests, positioning, and onboarding guides.',
-    commitment: '10–20 hrs/wk',
-    stipend: 'Unpaid',
-  },
-  {
-    id: 'ui-ux-design',
-    number: '04',
-    title: 'UI/UX Design Intern',
-    focus: 'Interface flows, clear typography, thermal receipt layouts, and usability checks.',
-    commitment: '10–20 hrs/wk',
-    stipend: 'Unpaid',
-  },
-  {
-    id: 'software-development',
-    number: '05',
-    title: 'Software Development Intern',
-    focus: 'Offline-first web apps, counter interfaces, internal tools, and data exports.',
+    title: 'Design & Engineering Intern',
+    focus:
+      "Interface flows, prototypes, and front-end work on the studio's tools.",
     commitment: '15–25 hrs/wk',
+    stipend: 'Unpaid',
+  },
+  {
+    id: 'growth-distribution',
+    number: '03',
+    title: 'Growth & Distribution Intern',
+    focus:
+      'Merchant outreach, onboarding, pricing tests, and distribution experiments.',
+    commitment: '10–20 hrs/wk',
     stipend: 'Unpaid',
   },
 ];
