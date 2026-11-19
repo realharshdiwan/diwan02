@@ -4,6 +4,7 @@ import {
   SITE,
   REGISTRATION,
   NAV,
+  STUDIO_PILLARS,
   RESEARCH_STUDIES,
   SIKKA_PRODUCT,
   INTERNSHIP_PROGRAMME,
@@ -17,14 +18,20 @@ import {
   contrastRatio,
 } from './site';
 
-test('hero statement, navigation, address, and product-free Research essays align with site structure', () => {
+test('studio positioning, navigation, address, and product-free Research essays align with site structure', () => {
   const lower = SITE.heroStatement.toLowerCase();
-  assert.ok(lower.includes('markets'));
-  assert.ok(lower.includes('businesses'));
-  assert.ok(lower.includes('products'));
+  assert.ok(lower.includes('research studio'));
+  assert.ok(lower.includes('business'));
+  assert.ok(lower.includes('software'));
+  assert.ok(lower.includes('ventures'));
   assert.ok(!lower.includes('in bengaluru'));
   assert.ok(!lower.includes('currently operating sikka'));
   assert.equal(REGISTRATION.locality, 'Ramesh Nagar, Bengaluru 560082');
+
+  assert.deepEqual(
+    STUDIO_PILLARS.map((pillar) => pillar.title),
+    ['Research', 'Ventures', 'Software'],
+  );
 
   assert.ok(RESEARCH_STUDIES.length >= 1);
   assert.ok(RESEARCH_STUDIES[0].paragraphs.length >= 2);
@@ -34,7 +41,7 @@ test('hero statement, navigation, address, and product-free Research essays alig
 
   assert.deepEqual(
     NAV.map((item) => item.label),
-    ['Product', 'Research', 'Careers', 'Contact'],
+    ['Ventures', 'Research', 'Careers', 'Contact'],
   );
   assert.equal(SIKKA_PRODUCT.url, 'https://sikka-pos.vercel.app/#top');
 });

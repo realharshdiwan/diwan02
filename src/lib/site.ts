@@ -53,12 +53,38 @@ export interface ValidationResult {
 export const SITE = {
   name: 'Diwan Mercantile',
   heroStatement:
-    'Diwan Mercantile researches markets, evaluates businesses, and builds software products.',
+    'An independent research studio. We study how a business actually runs, then build the software and ventures that follow.',
+  description:
+    'Diwan Mercantile is an independent research studio in Bengaluru. We study how businesses run, then build the software and ventures that follow.',
   url: 'https://www.diwanmercantile.in',
   contactEmail: 'diwanmercantileindia@gmail.com',
   basedIn: 'Bengaluru, Karnataka',
   year: 2026,
 } as const;
+
+export interface StudioPillar {
+  n: string;
+  title: string;
+  body: string;
+}
+
+export const STUDIO_PILLARS: readonly StudioPillar[] = [
+  {
+    n: '01',
+    title: 'Research',
+    body: 'Field studies of how a market actually operates: the counter, the stockroom, the ledger, and the places software is assumed to help but does not.',
+  },
+  {
+    n: '02',
+    title: 'Ventures',
+    body: 'Where the research points at a gap, we build the product ourselves and run it. Sikka is the first.',
+  },
+  {
+    n: '03',
+    title: 'Software',
+    body: 'Web systems, internal tools, and automation — for the ventures, and for the businesses the research is about.',
+  },
+] as const;
 
 /**
  * Optional custom mascot asset path (e.g. '/mascot.png' or '/mascot.svg').
@@ -78,7 +104,7 @@ export const REGISTRATION = {
 } as const;
 
 export const NAV: readonly NavItem[] = [
-  { label: 'Product', href: '/#product' },
+  { label: 'Ventures', href: '/#ventures' },
   { label: 'Research', href: '/research' },
   { label: 'Careers', href: '/careers' },
   { label: 'Contact', href: '/#contact' },

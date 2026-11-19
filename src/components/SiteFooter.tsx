@@ -14,7 +14,7 @@ export function SiteFooter({ onNavigate }: SiteFooterProps) {
             {SITE.name}
           </p>
           <p className="mt-3 max-w-[32ch] text-[13.5px] leading-[1.6] text-ink-3">
-            Research, evaluation, and software products in {SITE.basedIn}.
+            Research, ventures, and software in {SITE.basedIn}.
           </p>
         </div>
 

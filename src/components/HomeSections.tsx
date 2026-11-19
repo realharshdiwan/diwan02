@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { motion } from 'motion/react';
-import { REGISTRATION, SIKKA_PRODUCT, SITE } from '@/src/lib/site';
+import { REGISTRATION, SIKKA_PRODUCT, SITE, STUDIO_PILLARS } from '@/src/lib/site';
 import { Label } from './Ui';
 
 interface HomeSectionsProps {
@@ -21,21 +21,63 @@ export function HomeSections({ onNavigate }: HomeSectionsProps) {
 
   return (
     <>
-      {/* ── Product: Sikka ─────────────────────────────────────── */}
+      {/* ── Studio: three pillars ──────────────────────────────── */}
       <motion.section
         {...revealProps}
-        id="product"
-        aria-labelledby="product-label"
+        id="studio"
+        aria-labelledby="studio-label"
         className="gutter py-16 sm:py-24"
       >
         <div className="shell">
-          <Label as="p" id="product-label">
-            Product
+          <Label as="p" id="studio-label">
+            Studio
           </Label>
 
           <div>
-            <div className="font-mono text-[11px] uppercase tracking-[0.14em] text-ink">
-              <span>{SIKKA_PRODUCT.name}</span>
+            <h2 className="max-w-[30ch] text-[clamp(1.5rem,2.8vw,2.25rem)] leading-[1.18] tracking-[-0.025em]">
+              We start with how the work is actually done, not with what to
+              build.
+            </h2>
+
+            <ol className="mt-10 grid gap-8 border-t border-line pt-8 sm:grid-cols-3 sm:gap-6">
+              {STUDIO_PILLARS.map((pillar) => (
+                <li key={pillar.n} className="border-line sm:border-l sm:pl-5 sm:first:border-l-0 sm:first:pl-0">
+                  <div className="font-mono text-[11px] uppercase tracking-[0.14em] text-ink-3">
+                    {pillar.n}
+                  </div>
+                  <h3 className="mt-3 text-[1.125rem] leading-tight tracking-[-0.02em]">
+                    {pillar.title}
+                  </h3>
+                  <p className="mt-2 max-w-[34ch] text-[14px] leading-[1.65] text-ink-2">
+                    {pillar.body}
+                  </p>
+                </li>
+              ))}
+            </ol>
+          </div>
+        </div>
+      </motion.section>
+
+      {/* ── Ventures: Sikka ────────────────────────────────────── */}
+      <motion.section
+        {...revealProps}
+        id="ventures"
+        aria-labelledby="ventures-label"
+        className="gutter py-16 sm:py-24"
+      >
+        <div className="shell">
+          <Label as="p" id="ventures-label">
+            Ventures
+          </Label>
+
+          <div>
+            <div className="flex flex-wrap items-baseline justify-between gap-x-6 gap-y-2">
+              <span className="font-mono text-[11px] uppercase tracking-[0.14em] text-ink">
+                {SIKKA_PRODUCT.name}
+              </span>
+              <span className="font-mono text-[11px] uppercase tracking-[0.14em] text-ink-3">
+                First venture
+              </span>
             </div>
 
             <h2 className="mt-3 max-w-[26ch] text-[clamp(1.5rem,2.5vw,2.1rem)] leading-[1.18] tracking-[-0.025em]">

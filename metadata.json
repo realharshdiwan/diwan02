@@ -1,6 +1,6 @@
 {
   "name": "Diwan Mercantile",
-  "description": "Independent software studio in Bengaluru building web systems, internal tools, and automation.",
+  "description": "Independent research studio in Bengaluru. We study how businesses run, then build the software and ventures that follow.",
   "requestFramePermissions": [],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }
