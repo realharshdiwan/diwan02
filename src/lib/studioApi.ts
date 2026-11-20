@@ -6,6 +6,7 @@ import { Resend } from 'resend';
 import { estimateReadingMinutes, slugifyTitle } from './markdown.ts';
 import {
   buildApplicantConfirmationPayload,
+  buildCandidateReplyPayload,
   buildStudioNotificationPayload,
   resolveResendConfig,
 } from './resendEmail.ts';
@@ -724,6 +725,7 @@ export async function handleApiRequest(
 
   // ── Public Studio Config (Safe Public Keys Only) ─────────────────────────
   if (method === 'GET' && pathClean === '/api/studio/config') {
+    const resendConfig = resolveResendConfig(process.env, SITE.contactEmail);
     return {
       status: 200,
       body: {
@@ -732,6 +734,8 @@ export async function handleApiRequest(
         serviceConfigured: Boolean(supabase),
         supabaseUrl: supabaseEnv.url,
         supabaseAnonKey: supabaseEnv.anonKey,
+        emailConfigured: Boolean(resendConfig.apiKey),
+        customResendDomain: resendConfig.customDomain,
       },
     };
   }
@@ -1045,6 +1049,130 @@ export async function handleApiRequest(
             ...mapDbApplication(data),
             id: String(data.reference_code || data.id),
           },
+        },
+      };
+    }
+
+    // Authenticated Candidate Reply Dispatch via Resend
+    if (
+      method === 'POST' &&
+      pathClean === '/api/studio/applications/reply'
+    ) {
+      const b = (req.body || {}) as {
+        referenceId?: string;
+        to?: string;
+        subject?: string;
+        body?: string;
+        nextStatus?: ApplicationStatus;
+      };
+      const to = String(b.to || '').trim();
+      const subject = String(b.subject || '').trim();
+      const body = String(b.body || '').trim();
+      const referenceId = String(b.referenceId || '').trim();
+
+      if (!to || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(to)) {
+        return {
+          status: 400,
+          body: { ok: false, message: 'Valid candidate email is required.' },
+        };
+      }
+      if (!subject || subject.length > 200) {
+        return {
+          status: 400,
+          body: {
+            ok: false,
+            message: 'Email subject is required (max 200 characters).',
+          },
+        };
+      }
+      if (!body || body.length > 8000) {
+        return {
+          status: 400,
+          body: {
+            ok: false,
+            message: 'Reply message is required (max 8,000 characters).',
+          },
+        };
+      }
+
+      const resendConfig = resolveResendConfig(process.env, SITE.contactEmail);
+      if (!resendConfig.apiKey) {
+        return {
+          status: 503,
+          body: {
+            ok: false,
+            message:
+              'RESEND_API_KEY is not configured. Use Open in Mail or Copy draft instead.',
+          },
+        };
+      }
+
+      if (!resendConfig.customDomain) {
+        return {
+          status: 422,
+          body: {
+            ok: false,
+            message:
+              'Resend is running in sandbox mode without a verified custom domain (RESEND_FROM_EMAIL). Use Open in Mail or Copy draft to send to external applicants.',
+          },
+        };
+      }
+
+      const resend = new Resend(resendConfig.apiKey);
+      const { error: sendError } = await resend.emails.send(
+        buildCandidateReplyPayload({
+          to,
+          referenceId,
+          subject,
+          body,
+          from: resendConfig.from,
+          replyTo: resendConfig.notifyEmail,
+        }),
+      );
+
+      if (sendError) {
+        return {
+          status: 502,
+          body: {
+            ok: false,
+            message: `Resend rejected delivery (${sendError.message}). Use Open in Mail or Copy draft instead.`,
+          },
+        };
+      }
+
+      let updatedApp: ApplicationRecord | null = null;
+      if (referenceId) {
+        const nextStatus =
+          b.nextStatus &&
+          APPLICATION_STATUSES.some((item) => item.value === b.nextStatus)
+            ? b.nextStatus
+            : undefined;
+        const updates: Record<string, unknown> = {
+          email_dispatched: true,
+          updated_at: new Date().toISOString(),
+        };
+        if (nextStatus) {
+          updates.status = nextStatus;
+        }
+        const { data: appRow } = await supabase
+          .from('applications')
+          .update(updates)
+          .eq('reference_code', referenceId)
+          .select('*')
+          .single();
+        if (appRow) {
+          updatedApp = {
+            ...mapDbApplication(appRow),
+            id: String(appRow.reference_code || appRow.id),
+          };
+        }
+      }
+
+      return {
+        status: 200,
+        body: {
+          ok: true,
+          application: updatedApp,
         },
       };
     }

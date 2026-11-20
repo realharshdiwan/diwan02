@@ -130,7 +130,7 @@ export function buildApplicantConfirmationPayload(
       `We received your application for ${record.role} at Diwan Mercantile.`,
       `Reference ID: ${record.id}`,
       '',
-      'Shortlisted applicants are invited for a 20-minute call and a 4-hour work sample.',
+      'We review every submission directly based on the work you shared and reply by email.',
       '',
       'Diwan Mercantile',
       'Ramesh Nagar, Bengaluru 560082',
@@ -148,10 +148,92 @@ export function buildApplicantConfirmationPayload(
             We received your application for <strong>${safeRole}</strong>.
           </p>
           <p style="margin:0 0 20px;font-size:14px;line-height:1.6;color:#595046;">
-            Shortlisted applicants are invited for a 20-minute call and a 4-hour work sample.
+            We review every submission directly based on the work you shared and reply by email.
           </p>
           <p style="margin:0;font-family:monospace;font-size:11px;letter-spacing:0.1em;text-transform:uppercase;color:#665d52;">
             Ramesh Nagar, Bengaluru 560082
+          </p>
+        </div>
+      </div>
+    `.trim(),
+  };
+}
+
+export function buildCandidateReplyPayload(params: {
+  to: string;
+  referenceId?: string;
+  subject: string;
+  body: string;
+  from: string;
+  replyTo: string;
+}) {
+  const safeRef = escapeHtml((params.referenceId || '').trim());
+  const headerLine = safeRef ? `Diwan Mercantile · ${safeRef}` : 'Diwan Mercantile';
+
+  const blocks = params.body
+    .trim()
+    .split(/\n{2,}/)
+    .map((block) => {
+      const lines = block
+        .split('\n')
+        .map((line) => line.trim())
+        .filter(Boolean);
+
+      const parts: string[] = [];
+      let textBuf: string[] = [];
+      let listBuf: string[] = [];
+
+      const flushText = () => {
+        if (textBuf.length === 0) return;
+        parts.push(
+          `<p style="margin:0 0 14px;font-size:15px;line-height:1.65;color:#1d1915;">${textBuf.map(escapeHtml).join('<br />')}</p>`,
+        );
+        textBuf = [];
+      };
+
+      const flushList = () => {
+        if (listBuf.length === 0) return;
+        const itemsHtml = listBuf
+          .map((item) => `<li style="margin:0 0 6px;">${escapeHtml(item)}</li>`)
+          .join('');
+        parts.push(
+          `<ul style="margin:0 0 16px;padding-left:20px;font-size:15px;line-height:1.65;color:#1d1915;">${itemsHtml}</ul>`,
+        );
+        listBuf = [];
+      };
+
+      for (const line of lines) {
+        if (line.startsWith('- ')) {
+          flushText();
+          listBuf.push(line.slice(2));
+        } else {
+          flushList();
+          textBuf.push(line);
+        }
+      }
+      flushText();
+      flushList();
+
+      return parts.join('');
+    })
+    .join('');
+
+  return {
+    from: params.from,
+    to: [params.to.trim()],
+    replyTo: params.replyTo,
+    subject: params.subject.trim(),
+    text: params.body.trim(),
+    html: `
+      <div style="background:#f5f1e8;padding:32px 24px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;color:#1d1915;">
+        <div style="max-width:600px;margin:0 auto;background:#fffdf9;border:1px solid #ddd6c8;padding:28px;">
+          <p style="margin:0 0 16px;font-family:monospace;font-size:11px;letter-spacing:0.14em;text-transform:uppercase;color:#b84121;">
+            ${headerLine}
+          </p>
+          ${blocks}
+          <hr style="border:none;border-top:1px solid #ddd6c8;margin:20px 0 14px;" />
+          <p style="margin:0;font-family:monospace;font-size:11px;letter-spacing:0.1em;text-transform:uppercase;color:#665d52;">
+            Diwan Mercantile · Ramesh Nagar, Bengaluru 560082
           </p>
         </div>
       </div>

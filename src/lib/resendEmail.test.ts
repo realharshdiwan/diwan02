@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import {
   DEFAULT_RESEND_FROM,
   buildApplicantConfirmationPayload,
+  buildCandidateReplyPayload,
   buildStudioNotificationPayload,
   escapeHtml,
   isCustomResendDomain,
@@ -69,4 +70,19 @@ test('studio notification and applicant confirmation payloads sanitize user text
   assert.deepEqual(applicant.to, ['asha@example.com']);
   assert.equal(applicant.replyTo, 'diwanmercantileindia@gmail.com');
   assert.ok(applicant.text.includes('DM-20261118-ABCD'));
+  assert.ok(!applicant.text.toLowerCase().includes('20-minute call'));
+
+  const reply = buildCandidateReplyPayload({
+    to: 'asha@example.com',
+    referenceId: 'DM-20261118-ABCD',
+    subject: 'Cohort 2026–27 · Research — Next steps',
+    body: 'Hi Asha,\n\nLook into:\n- Observe <3> counters\n- Write one field note',
+    from: 'Diwan Mercantile <careers@diwanmercantile.in>',
+    replyTo: 'diwanmercantileindia@gmail.com',
+  });
+  assert.deepEqual(reply.to, ['asha@example.com']);
+  assert.equal(reply.replyTo, 'diwanmercantileindia@gmail.com');
+  assert.ok(reply.html.includes('<ul'));
+  assert.ok(reply.html.includes('Observe &lt;3&gt; counters'));
+  assert.ok(!reply.html.includes('<3>'));
 });

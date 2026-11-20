@@ -2,6 +2,12 @@ import { useCallback, useEffect, useMemo, useState, type FormEvent } from 'react
 import { createClient, type Session, type SupabaseClient } from '@supabase/supabase-js';
 import { estimateReadingMinutes, slugifyTitle } from '@/src/lib/markdown';
 import {
+  buildCandidateMailtoHref,
+  buildCandidateReplyTemplate,
+  resolveInternshipTrack,
+  type ReplyDecision,
+} from '@/src/lib/candidateReplies';
+import {
   APPLICATION_STATUSES,
   SITE,
   STUDIO_ITEM_STATUSES,
@@ -34,6 +40,8 @@ interface StudioConfig {
   serviceConfigured: boolean;
   supabaseUrl: string;
   supabaseAnonKey: string;
+  emailConfigured?: boolean;
+  customResendDomain?: boolean;
 }
 
 interface CandidateRow extends ApplicationRecord {
@@ -187,6 +195,17 @@ export function StudioView({ onNavigate }: StudioViewProps) {
   );
   const [reviewerDraft, setReviewerDraft] = useState('');
   const [savingCandidate, setSavingCandidate] = useState(false);
+  const [replyDecision, setReplyDecision] =
+    useState<ReplyDecision>('shortlisted');
+  const [replySubject, setReplySubject] = useState('');
+  const [replyBody, setReplyBody] = useState('');
+  const [replyEdited, setReplyEdited] = useState(false);
+  const [copiedReply, setCopiedReply] = useState(false);
+  const [sendingReply, setSendingReply] = useState(false);
+  const [replyFeedback, setReplyFeedback] = useState<{
+    kind: 'ok' | 'err';
+    text: string;
+  } | null>(null);
 
   // Desk state
   const [deskStreamFilter, setDeskStreamFilter] = useState<'all' | StudioStream>(
@@ -217,6 +236,8 @@ export function StudioView({ onNavigate }: StudioViewProps) {
           serviceConfigured: Boolean(data.serviceConfigured),
           supabaseUrl: url,
           supabaseAnonKey: anonKey,
+          emailConfigured: Boolean(data.emailConfigured),
+          customResendDomain: Boolean(data.customResendDomain),
         };
         setConfig(resolved);
         if (url && anonKey) {
@@ -231,6 +252,8 @@ export function StudioView({ onNavigate }: StudioViewProps) {
           serviceConfigured: false,
           supabaseUrl: viteUrl,
           supabaseAnonKey: viteKey,
+          emailConfigured: false,
+          customResendDomain: false,
         };
         setConfig(resolved);
         if (viteUrl && viteKey) {
@@ -280,6 +303,48 @@ export function StudioView({ onNavigate }: StudioViewProps) {
     [session],
   );
 
+  const applyReplyTemplate = useCallback(
+    (candidate: CandidateRow | null, decision: ReplyDecision) => {
+      if (!candidate) {
+        setReplySubject('');
+        setReplyBody('');
+        setReplyEdited(false);
+        setReplyFeedback(null);
+        return;
+      }
+      const draft = buildCandidateReplyTemplate(
+        {
+          referenceId: candidate.id,
+          name: candidate.name,
+          email: candidate.email,
+          role: candidate.role,
+          portfolioUrl: candidate.portfolioUrl,
+          note: candidate.note,
+        },
+        decision,
+      );
+      setReplyDecision(decision);
+      setReplySubject(draft.subject);
+      setReplyBody(draft.body);
+      setReplyEdited(false);
+      setReplyFeedback(null);
+    },
+    [],
+  );
+
+  const selectCandidateRow = useCallback(
+    (cand: CandidateRow) => {
+      setSelectedCandidateId(cand.id);
+      setReviewerDraft(cand.reviewerNotes || '');
+      const initialDecision: ReplyDecision =
+        cand.status === 'reviewed' || cand.status === 'archived'
+          ? 'not_selected'
+          : 'shortlisted';
+      applyReplyTemplate(cand, initialDecision);
+    },
+    [applyReplyTemplate],
+  );
+
   const loadOverview = useCallback(async () => {
     if (!session?.access_token) return;
     setLoadingOverview(true);
@@ -316,8 +381,7 @@ export function StudioView({ onNavigate }: StudioViewProps) {
         setEditingCohort(loadedCohorts[0]);
       }
       if (loadedApps.length > 0 && !selectedCandidateId) {
-        setSelectedCandidateId(loadedApps[0].id);
-        setReviewerDraft(loadedApps[0].reviewerNotes || '');
+        selectCandidateRow(loadedApps[0]);
       }
     } catch (err) {
       const msg = err instanceof Error ? err.message : 'Unable to open Studio Ledger';
@@ -330,6 +394,7 @@ export function StudioView({ onNavigate }: StudioViewProps) {
     editingCohort.id,
     editingPost.id,
     editingVenture.id,
+    selectCandidateRow,
     selectedCandidateId,
     session,
   ]);
@@ -620,6 +685,65 @@ export function StudioView({ onNavigate }: StudioViewProps) {
       });
     } finally {
       setSavingCandidate(false);
+    }
+  };
+
+  const handleCopyReply = async () => {
+    if (!replySubject && !replyBody) return;
+    const text = `Subject: ${replySubject}\n\n${replyBody}`;
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopiedReply(true);
+      setReplyFeedback({
+        kind: 'ok',
+        text: 'Copied subject and reply draft to clipboard.',
+      });
+      window.setTimeout(() => setCopiedReply(false), 2000);
+    } catch {
+      setReplyFeedback({
+        kind: 'err',
+        text: 'Clipboard access blocked. Select and copy the message text directly.',
+      });
+    }
+  };
+
+  const handleSendCandidateReply = async () => {
+    if (!selectedCandidate) return;
+    setSendingReply(true);
+    setReplyFeedback(null);
+    const nextStatus: ApplicationStatus =
+      replyDecision === 'shortlisted' ? 'shortlisted' : 'reviewed';
+    try {
+      const res = (await apiFetch('/api/studio/applications/reply', {
+        method: 'POST',
+        body: JSON.stringify({
+          referenceId: selectedCandidate.id,
+          to: selectedCandidate.email,
+          subject: replySubject,
+          body: replyBody,
+          nextStatus,
+        }),
+      })) as { application?: CandidateRow | null };
+
+      if (res.application) {
+        setCandidates((prev) =>
+          prev.map((c) => (c.id === selectedCandidate.id ? res.application! : c)),
+        );
+      }
+      setReplyFeedback({
+        kind: 'ok',
+        text: `Reply sent to ${selectedCandidate.email} and stage updated to ${nextStatus}.`,
+      });
+    } catch (err) {
+      setReplyFeedback({
+        kind: 'err',
+        text:
+          err instanceof Error
+            ? err.message
+            : 'Unable to send via Resend. Use Open in email app or Copy draft.',
+      });
+    } finally {
+      setSendingReply(false);
     }
   };
 
@@ -1915,10 +2039,7 @@ export function StudioView({ onNavigate }: StudioViewProps) {
                           return (
                             <tr
                               key={cand.id}
-                              onClick={() => {
-                                setSelectedCandidateId(cand.id);
-                                setReviewerDraft(cand.reviewerNotes || '');
-                              }}
+                              onClick={() => selectCandidateRow(cand)}
                               className={`cursor-pointer transition-colors ${
                                 active ? 'bg-field' : 'hover:bg-field/60'
                               }`}
@@ -2038,7 +2159,7 @@ export function StudioView({ onNavigate }: StudioViewProps) {
                           rows={3}
                           value={reviewerDraft}
                           onChange={(e) => setReviewerDraft(e.target.value)}
-                          placeholder="Call impressions, work-sample evaluation..."
+                          placeholder="Review impressions, submitted work notes..."
                           className="w-full border border-line bg-field px-3 py-2 text-[13.5px] text-ink"
                         />
                         <button
@@ -2053,6 +2174,161 @@ export function StudioView({ onNavigate }: StudioViewProps) {
                         >
                           Save note
                         </button>
+                      </div>
+
+                      <div className="space-y-3 border-t border-line pt-4">
+                        <div className="flex flex-wrap items-center justify-between gap-2">
+                          <div>
+                            <Label>Reply Template</Label>
+                            <p className="mt-0.5 font-mono text-[11px] text-ink-3">
+                              Track:{' '}
+                              {resolveInternshipTrack(selectedCandidate.role) ===
+                              'research'
+                                ? 'Research'
+                                : resolveInternshipTrack(
+                                      selectedCandidate.role,
+                                    ) === 'design_build'
+                                  ? 'Design & build'
+                                  : resolveInternshipTrack(
+                                        selectedCandidate.role,
+                                      ) === 'growth_distribution'
+                                    ? 'Growth & distribution'
+                                    : selectedCandidate.role}
+                            </p>
+                          </div>
+
+                          <div className="flex flex-wrap items-center gap-1">
+                            {(
+                              [
+                                { id: 'shortlisted', label: 'Shortlisted' },
+                                { id: 'not_selected', label: 'Thank you' },
+                              ] as const
+                            ).map((mode) => {
+                              const active = replyDecision === mode.id;
+                              return (
+                                <button
+                                  key={mode.id}
+                                  type="button"
+                                  onClick={() =>
+                                    applyReplyTemplate(
+                                      selectedCandidate,
+                                      mode.id,
+                                    )
+                                  }
+                                  className={`cursor-pointer whitespace-nowrap px-2.5 py-1 font-mono text-[11px] uppercase tracking-[0.1em] transition-colors ${
+                                    active
+                                      ? 'bg-ink text-field'
+                                      : 'border border-line text-ink-2 hover:text-ink'
+                                  }`}
+                                >
+                                  {mode.label}
+                                </button>
+                              );
+                            })}
+                            {replyEdited && (
+                              <button
+                                type="button"
+                                onClick={() =>
+                                  applyReplyTemplate(
+                                    selectedCandidate,
+                                    replyDecision,
+                                  )
+                                }
+                                className="cursor-pointer whitespace-nowrap px-2 py-1 font-mono text-[11px] uppercase tracking-[0.1em] text-ink-3 underline underline-offset-4 hover:text-accent"
+                              >
+                                Reset
+                              </button>
+                            )}
+                          </div>
+                        </div>
+
+                        <div>
+                          <label
+                            htmlFor="candidate-reply-subject"
+                            className="label mb-1 block"
+                          >
+                            Subject
+                          </label>
+                          <input
+                            id="candidate-reply-subject"
+                            type="text"
+                            value={replySubject}
+                            onChange={(e) => {
+                              setReplySubject(e.target.value);
+                              setReplyEdited(true);
+                            }}
+                            className="w-full border border-line bg-field px-3 py-2 text-[13.5px] text-ink"
+                          />
+                        </div>
+
+                        <div>
+                          <label
+                            htmlFor="candidate-reply-body"
+                            className="label mb-1 block"
+                          >
+                            Message (editable before sending)
+                          </label>
+                          <textarea
+                            id="candidate-reply-body"
+                            rows={11}
+                            value={replyBody}
+                            onChange={(e) => {
+                              setReplyBody(e.target.value);
+                              setReplyEdited(true);
+                            }}
+                            className="w-full border border-line bg-field px-3 py-2 text-[13.5px] leading-[1.6] text-ink"
+                          />
+                        </div>
+
+                        {replyFeedback && (
+                          <p
+                            className={`border px-3 py-2 text-[13px] ${
+                              replyFeedback.kind === 'ok'
+                                ? 'border-line bg-field text-ink'
+                                : 'border-accent/40 bg-field text-accent'
+                            }`}
+                          >
+                            {replyFeedback.text}
+                          </p>
+                        )}
+
+                        <div className="flex flex-wrap items-center gap-2.5 pt-1">
+                          <button
+                            type="button"
+                            disabled={sendingReply || !replySubject.trim() || !replyBody.trim()}
+                            onClick={handleSendCandidateReply}
+                            className="cursor-pointer whitespace-nowrap border border-accent bg-accent px-4 py-2 font-mono text-[11px] uppercase tracking-[0.12em] text-field transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
+                          >
+                            {sendingReply ? 'Sending…' : 'Send via Resend'}
+                          </button>
+
+                          <a
+                            href={buildCandidateMailtoHref({
+                              to: selectedCandidate.email,
+                              subject: replySubject,
+                              body: replyBody,
+                            })}
+                            className="whitespace-nowrap border border-ink px-4 py-2 font-mono text-[11px] uppercase tracking-[0.12em] text-ink transition-colors hover:border-accent hover:text-accent"
+                          >
+                            Open in email app
+                          </a>
+
+                          <button
+                            type="button"
+                            onClick={handleCopyReply}
+                            className="cursor-pointer whitespace-nowrap border border-line px-4 py-2 font-mono text-[11px] uppercase tracking-[0.12em] text-ink-2 transition-colors hover:border-ink hover:text-ink"
+                          >
+                            {copiedReply ? 'Copied' : 'Copy draft'}
+                          </button>
+                        </div>
+
+                        {config && !config.customResendDomain && (
+                          <p className="text-[12.5px] leading-[1.5] text-ink-3">
+                            Direct Resend delivery requires a verified custom
+                            domain (`RESEND_FROM_EMAIL`). Until then, use Open
+                            in email app or Copy draft to reply directly.
+                          </p>
+                        )}
                       </div>
                     </div>
                   )}
